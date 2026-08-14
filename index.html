@@ -1,0 +1,660 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Notes on belonging</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Literata:ital,opsz,wght@0,18..144,400;0,18..144,500;1,18..144,400;1,18..144,500&family=Petrona:ital,wght@0,400;0,500;1,400;1,500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg: #16181d;
+    --ink: #ece9e2;
+    --ink-dim: #b3afa8;
+    --ink-faint: #58554f;
+    --accent: #b6667a;
+    --accent-dim: #5c3c45;
+    --line: rgba(236,233,226,0.09);
+    --c-amber: #e0a95c;
+    --c-sage: #82a377;
+    --c-blue: #6f8cb3;
+    --c-gray: #4c4944;
+  }
+
+  *{ box-sizing:border-box; }
+
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--ink);
+    font-family:'Literata', serif;
+    -webkit-font-smoothing:antialiased;
+    position:relative;
+  }
+
+  /* subtle film grain — breaks up the flat dark background without adding any decoration */
+  body::before{
+    content:"";
+    position:fixed;
+    inset:0;
+    pointer-events:none;
+    z-index:1;
+    opacity:0.05;
+    mix-blend-mode:overlay;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+
+  ::selection{ background:var(--accent-dim); color:var(--ink); }
+
+  .hero-visual{
+    position:relative;
+    background: radial-gradient(120% 90% at 50% 30%, #191b20 0%, #101115 62%, #0c0d10 100%);
+    padding: 9vh 6vw 6vh;
+  }
+
+  .scene{
+    position:relative;
+    width:100%;
+    max-width:860px;
+    margin:0 auto;
+    padding-bottom:50%;
+    overflow:hidden;
+  }
+
+  .scene svg{
+    position:absolute;
+    inset:0;
+    width:100%;
+    height:100%;
+    display:block;
+    transform-origin:50% 55%;
+    animation: slow-zoom 22s ease-out 3.6s 1 forwards;
+  }
+
+  @keyframes slow-zoom{
+    from{ transform:scale(1); }
+    to{ transform:scale(1.035); }
+  }
+
+  .scene::after{
+    content:"";
+    position:absolute;
+    inset:0;
+    pointer-events:none;
+    background: radial-gradient(60% 55% at 20% 82%, transparent 0%, rgba(9,10,12,0.6) 78%, rgba(6,7,8,0.84) 100%);
+  }
+
+  .glow-orb{
+    position:absolute;
+    left:15%;
+    top:83%;
+    width:16%;
+    height:30%;
+    min-width:110px;
+    min-height:80px;
+    transform:translate(-50%,-50%);
+    border-radius:50%;
+    background: radial-gradient(circle, rgba(182,102,122,0.32), transparent 70%);
+    filter: blur(8px);
+    opacity:0;
+    animation: glow-pulse 6s ease-in-out infinite;
+    animation-play-state: paused;
+    transition: opacity 2.4s ease;
+    pointer-events:none;
+  }
+  .glow-orb.arrived{ opacity:1; animation-play-state:running; }
+
+  .crowd-figure, .lone-figure{
+    opacity:0;
+    animation-play-state:paused;
+  }
+  .crowd-figure{
+    animation: drift 4s ease-in-out infinite;
+    filter: saturate(0.5);
+    transition: opacity 1.3s ease, filter 2.6s ease;
+  }
+  .crowd-figure.entered{ opacity:0.8; animation-play-state:running; }
+  .crowd-figure.c-amber{ fill:var(--c-amber); }
+  .crowd-figure.c-sage{ fill:var(--c-sage); }
+  .crowd-figure.c-blue{ fill:var(--c-blue); }
+
+  body.warm .crowd-figure{ filter:saturate(1.25); }
+
+  .crowd-link{
+    stroke:var(--ink-faint);
+    stroke-width:0.6;
+    opacity:0;
+    animation: link-pulse 7s ease-in-out infinite;
+    animation-play-state:paused;
+    transition: opacity 1.4s ease .3s;
+  }
+  .crowd-link.entered{ animation-play-state:running; }
+  @keyframes link-pulse{
+    0%,100%{ opacity:0.12; }
+    50%{ opacity:0.34; }
+  }
+
+  .lone-figure{
+    fill:var(--c-gray);
+    stroke:var(--accent);
+    stroke-width:1.1;
+    animation: breathe-alone 8s ease-in-out infinite;
+    transition: opacity 1.6s ease;
+  }
+  .lone-figure.entered{ opacity:0.92; animation-play-state:running; }
+
+  @keyframes drift{
+    0%,100%{ transform: translateY(0); }
+    50%{ transform: translateY(-4px); }
+  }
+  @keyframes breathe-alone{
+    0%,100%{ opacity:0.85; }
+    50%{ opacity:0.42; }
+  }
+  @keyframes glow-pulse{
+    0%,100%{ opacity:0.55; transform:translate(-50%,-50%) scale(1); }
+    50%{ opacity:0.85; transform:translate(-50%,-50%) scale(1.12); }
+  }
+
+  .hero-caption{
+    max-width:640px;
+    margin: 5vh auto 0;
+    opacity:0;
+    transition: opacity 1.6s ease;
+  }
+  .hero-caption.entered{ opacity:1; }
+
+  .hero-line{
+    font-family:'Petrona', serif;
+    font-style:italic;
+    font-weight:400;
+    font-size: clamp(28px, 4.8vw, 48px);
+    letter-spacing:-0.01em;
+    line-height:1.3;
+    color:var(--ink);
+    margin:0;
+    max-width:15ch;
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    .crowd-figure, .lone-figure, .glow-orb, .crowd-link, .scene svg{ animation:none; }
+    .crowd-figure, .lone-figure, .hero-caption{ opacity:1 !important; }
+  }
+
+  .page{
+    max-width:1160px;
+    margin:0 auto;
+    padding: 8vh 6vw 18vh;
+    display:grid;
+    grid-template-columns: 280px 1fr;
+    gap:72px;
+    position:relative;
+    z-index:2;
+  }
+
+  .sidebar{
+    position:sticky;
+    top:9vh;
+    align-self:start;
+    height:fit-content;
+  }
+
+  .headline{
+    font-family:'Petrona', serif;
+    font-style:italic;
+    font-weight:400;
+    font-size:22px;
+    letter-spacing:0.01em;
+    line-height:1.5;
+    margin: 0 0 34px;
+    color:var(--ink-dim);
+    transition: color 1.4s ease;
+  }
+  .headline.warmed{ color:var(--ink); }
+
+  .map-wrap{
+    border-top:1px solid var(--line);
+    padding-top:22px;
+  }
+  .map-wrap svg{ width:100%; height:auto; display:block; }
+
+  .seat{ fill:var(--ink-faint); opacity:0.6; }
+  .seat.c-amber{ fill:var(--c-amber); opacity:0.5; }
+  .seat.c-sage{ fill:var(--c-sage); opacity:0.5; }
+  .seat.c-blue{ fill:var(--c-blue); opacity:0.5; }
+
+  .hope{
+    fill:transparent;
+    stroke:var(--ink-faint);
+    stroke-width:0.75;
+    opacity:0.4;
+    transition: fill 1.1s ease, stroke 1.1s ease, opacity 1.1s ease, stroke-width 1.1s ease;
+  }
+  .hope.filled{
+    fill:var(--accent);
+    stroke:var(--accent);
+    stroke-width:1.2;
+    opacity:1;
+  }
+  .hope.uncertain{
+    fill:var(--accent);
+    stroke:var(--accent);
+    stroke-width:1;
+    stroke-dasharray:1.5 1.5;
+    opacity:0.55;
+  }
+
+  .you{
+    fill:transparent;
+    stroke:var(--accent);
+    stroke-width:1.4;
+    transition: fill 1.6s ease;
+  }
+  .you.bloom{ fill:var(--accent); }
+
+  .companion{
+    fill:transparent;
+    stroke:var(--ink-faint);
+    stroke-width:1.2;
+    opacity:0;
+    transition: opacity 2.2s ease, fill 2.2s ease, stroke 2.2s ease;
+  }
+  .companion.near{ opacity:1; stroke:var(--accent); fill:var(--accent-dim); }
+
+  .link{
+    stroke:var(--accent);
+    stroke-width:1;
+    stroke-dasharray:2.5 3;
+    opacity:0;
+    transition: opacity 1.3s ease .15s;
+  }
+  .link.on{ opacity:0.55; }
+  .link.faded{ opacity:0.18; }
+
+  .essay{ max-width:640px; }
+
+  .entry{
+    display:grid;
+    grid-template-columns: 34px 1fr;
+    gap:22px;
+    padding: 2.1em 0;
+    border-top:1px solid var(--line);
+    opacity:0;
+    transform:translateY(14px);
+    transition:opacity .9s ease, transform .9s ease;
+    position:relative;
+  }
+  .entry:first-child{ border-top:none; padding-top:0; }
+  .entry.in{ opacity:1; transform:translateY(0); }
+
+  .idx{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:12px;
+    color:var(--ink-faint);
+    padding-top:0.35em;
+  }
+
+  .entry p{
+    margin:0;
+    font-size: clamp(17px, 1.9vw, 19px);
+    line-height:1.85;
+    color:var(--ink-dim);
+  }
+  .entry.in p{ color:var(--ink); }
+
+  .quote{
+    grid-column: 1 / -1;
+    font-family:'Petrona', serif;
+    font-style:italic;
+    font-size: clamp(23px, 3vw, 29px);
+    line-height:1.5;
+    color:var(--accent);
+    margin:0;
+    padding: 0.3em 0 0.3em 26px;
+    border-left:1px solid var(--accent-dim);
+  }
+
+  .mini-visual{
+    margin: 0 0 20px;
+    opacity:0;
+    transform:translateY(12px);
+    transition:opacity .9s ease, transform .9s ease;
+  }
+  .mini-visual.in{ opacity:1; transform:translateY(0); }
+  .mini-visual svg{ width:150px; height:auto; display:block; }
+
+  .mv-lit{ fill:var(--c-amber); opacity:0.7; }
+  .mv-c2{ fill:var(--c-sage); opacity:0.7; }
+  .mv-c3{ fill:var(--c-blue); opacity:0.7; }
+  .mv-dim{ fill:var(--c-gray); opacity:0.65; stroke:var(--accent); stroke-width:1; }
+  .mv-bubble{ fill:var(--c-sage); opacity:0.65; }
+  .mv-bubble-lone{ fill:none; stroke:var(--accent); stroke-width:1.1; stroke-dasharray:3 3; opacity:0.8; }
+  .mv-head{ fill:var(--c-amber); opacity:0.7; }
+  .mv-gap{ fill:none; stroke:var(--accent); stroke-width:1.1; stroke-dasharray:3 3; opacity:0.8; }
+  .mv-hline{ stroke:var(--ink-faint); stroke-width:1; }
+  .mv-sun{ fill:var(--accent); opacity:0.85; }
+  .mv-mask{ fill:var(--bg); }
+  .mv-phone{ fill:none; stroke:var(--ink-faint); stroke-width:1.3; }
+  .mv-dot{ fill:var(--ink-faint); opacity:0.5; }
+
+  .thoughts{
+    position:relative;
+    height:2.6em;
+    margin: -0.4em 0 0.6em;
+  }
+  .thought{
+    position:absolute;
+    left:0; top:0;
+    font-family:'Petrona', serif;
+    font-style:italic;
+    font-size: clamp(15px, 1.7vw, 17px);
+    color:var(--ink-faint);
+    opacity:0;
+    animation: thought-cycle 9s ease-in-out infinite;
+  }
+  .thought:nth-child(1){ animation-delay:0s; }
+  .thought:nth-child(2){ animation-delay:3s; }
+  .thought:nth-child(3){ animation-delay:6s; }
+  @keyframes thought-cycle{
+    0%{ opacity:0; }
+    8%{ opacity:0.8; }
+    26%{ opacity:0.8; }
+    36%{ opacity:0; }
+    100%{ opacity:0; }
+  }
+
+  .quote-block{
+    padding: 2.4em 0;
+    opacity:0;
+    transform:translateY(14px);
+    transition:opacity .9s ease, transform .9s ease;
+  }
+  .quote-block.in{ opacity:1; transform:translateY(0); }
+
+  .closing .quote{
+    font-size: clamp(28px, 3.6vw, 36px);
+    color:var(--ink);
+    border-left-color:var(--accent);
+  }
+
+  @media (max-width: 860px){
+    .page{ grid-template-columns:1fr; gap:50px; }
+    .sidebar{ position:static; }
+    .headline{ font-size:20px; }
+  }
+
+  @media (max-width: 520px){
+    .scene{ padding-bottom:72%; }
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    .entry, .quote-block, .mini-visual, .thought{ transition:none; opacity:1; transform:none; animation:none; }
+    .hope, .you, .link, .glow-orb, .crowd-figure, .headline, .companion{ transition:none; }
+    .glow-orb{ opacity:0.55; animation-play-state:running; }
+  }
+</style>
+</head>
+<body>
+
+<section class="hero-visual">
+ <div class="scene">
+  <div class="glow-orb" id="glow-orb"></div>
+  <svg viewBox="0 0 800 400" preserveAspectRatio="xMidYMid meet" aria-hidden="true">
+    <defs>
+      <symbol id="person" viewBox="0 0 20 34">
+        <circle cx="10" cy="6" r="6"/>
+        <path d="M2,34 C2,20 4,14 10,14 C16,14 18,20 18,34 Z"/>
+      </symbol>
+    </defs>
+
+    <line class="crowd-link" data-cluster="1" style="animation-delay:.1s" x1="90" y1="80" x2="118" y2="68"/>
+    <line class="crowd-link" data-cluster="1" style="animation-delay:.6s" x1="118" y1="68" x2="142" y2="94"/>
+    <line class="crowd-link" data-cluster="2" style="animation-delay:.35s" x1="585" y1="74" x2="615" y2="62"/>
+    <line class="crowd-link" data-cluster="2" style="animation-delay:.9s" x1="615" y1="62" x2="640" y2="92"/>
+    <line class="crowd-link" data-cluster="3" style="animation-delay:.2s" x1="658" y1="202" x2="688" y2="188"/>
+    <line class="crowd-link" data-cluster="3" style="animation-delay:.75s" x1="688" y1="188" x2="714" y2="218"/>
+    <line class="crowd-link" data-cluster="4" style="animation-delay:.45s" x1="446" y1="282" x2="472" y2="266"/>
+    <line class="crowd-link" data-cluster="4" style="animation-delay:1s" x1="472" y1="266" x2="502" y2="292"/>
+    <line class="crowd-link" data-cluster="4" style="animation-delay:.15s" x1="472" y1="266" x2="480" y2="314"/>
+
+    <g class="crowd-figure c-amber" data-cluster="1" style="animation-delay:0s" transform="translate(80,64) scale(1.05)"><use href="#person"/></g>
+    <g class="crowd-figure c-sage" data-cluster="1" style="animation-delay:.5s" transform="translate(108,52) scale(0.95)"><use href="#person"/></g>
+    <g class="crowd-figure c-blue" data-cluster="1" style="animation-delay:.2s" transform="translate(132,78) scale(1)"><use href="#person"/></g>
+    <g class="crowd-figure c-amber" data-cluster="1" style="animation-delay:.7s" transform="translate(100,96) scale(0.9)"><use href="#person"/></g>
+
+    <g class="crowd-figure c-sage" data-cluster="2" style="animation-delay:.3s" transform="translate(575,58) scale(1)"><use href="#person"/></g>
+    <g class="crowd-figure c-blue" data-cluster="2" style="animation-delay:.9s" transform="translate(605,46) scale(0.9)"><use href="#person"/></g>
+    <g class="crowd-figure c-amber" data-cluster="2" style="animation-delay:.1s" transform="translate(630,76) scale(1.05)"><use href="#person"/></g>
+
+    <g class="crowd-figure c-blue" data-cluster="3" style="animation-delay:.6s" transform="translate(648,186) scale(0.95)"><use href="#person"/></g>
+    <g class="crowd-figure c-amber" data-cluster="3" style="animation-delay:.15s" transform="translate(678,172) scale(1.1)"><use href="#person"/></g>
+    <g class="crowd-figure c-sage" data-cluster="3" style="animation-delay:.8s" transform="translate(704,202) scale(0.9)"><use href="#person"/></g>
+
+    <g class="crowd-figure c-sage" data-cluster="4" style="animation-delay:.4s" transform="translate(436,266) scale(1)"><use href="#person"/></g>
+    <g class="crowd-figure c-amber" data-cluster="4" style="animation-delay:1s" transform="translate(462,250) scale(0.95)"><use href="#person"/></g>
+    <g class="crowd-figure c-blue" data-cluster="4" style="animation-delay:.25s" transform="translate(492,276) scale(1.05)"><use href="#person"/></g>
+    <g class="crowd-figure c-sage" data-cluster="4" style="animation-delay:.55s" transform="translate(470,298) scale(0.9)"><use href="#person"/></g>
+
+    <g class="lone-figure" data-cluster="5" transform="translate(118,328) scale(1.15)"><use href="#person"/></g>
+  </svg>
+ </div>
+
+  <div class="hero-caption" id="hero-caption">
+    <p class="hero-line">I can feel alone in a crowd.</p>
+  </div>
+</section>
+
+<div class="page">
+
+  <aside class="sidebar">
+    <p class="headline" id="sidebar-headline">Maybe I simply haven't found my people yet.</p>
+
+    <div class="map-wrap">
+      <svg viewBox="0 0 240 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <circle class="seat c-amber" cx="40" cy="30" r="5"/>
+        <circle class="seat c-sage" cx="52" cy="26" r="5"/>
+        <circle class="seat c-blue" cx="46" cy="40" r="5"/>
+
+        <circle class="seat c-sage" cx="172" cy="24" r="5"/>
+        <circle class="seat c-blue" cx="184" cy="33" r="5"/>
+        <circle class="seat c-amber" cx="162" cy="37" r="5"/>
+
+        <circle class="seat c-blue" cx="202" cy="90" r="5"/>
+        <circle class="seat c-amber" cx="214" cy="100" r="5"/>
+        <circle class="seat c-sage" cx="196" cy="104" r="5"/>
+
+        <circle class="seat c-amber" cx="150" cy="150" r="5"/>
+        <circle class="seat c-sage" cx="162" cy="158" r="5"/>
+        <circle class="seat c-blue" cx="140" cy="160" r="5"/>
+
+        <path class="link link-1" d="M35,150 L70,140"/>
+        <path class="link link-2" d="M35,150 L95,120"/>
+        <path class="link link-3" d="M35,150 L110,95"/>
+        <path class="link link-4" d="M35,150 L90,165"/>
+        <path class="link link-5" d="M35,150 L60,110"/>
+
+        <circle class="hope" id="hope-1" cx="70" cy="140" r="5"/>
+        <circle class="hope" id="hope-2" cx="95" cy="120" r="5"/>
+        <circle class="hope" id="hope-3" cx="110" cy="95" r="5"/>
+        <circle class="hope" id="hope-4" cx="90" cy="165" r="5"/>
+        <circle class="hope" id="hope-5" cx="60" cy="110" r="5"/>
+
+        <circle class="companion" id="companion" cx="22" cy="135" r="5.5"/>
+
+        <circle class="you" id="you" cx="35" cy="150" r="7"/>
+      </svg>
+    </div>
+  </aside>
+
+  <main class="essay" id="essay"></main>
+
+</div>
+
+<script>
+  const essay = document.getElementById('essay');
+
+  const numbered = [
+    "University has a way of making my loneliness feel louder.",
+    "At home, I can be alone and be completely fine. But at uni, I constantly see people with their groups, making plans, going out and creating memories together. Meanwhile, I often find myself back in my room, wondering what it would feel like to have people who naturally include me.",
+    "Sometimes I try going out, but even then I can feel alone in a crowd. Everyone seems to have someone, and I'm just there, not really knowing who to talk to.",
+    "I've spent so much time wondering whether something is wrong with me. Maybe I wasn't depressed — maybe I was just tired of feeling like I didn't belong anywhere.",
+    "And when I get attached to people, being left out hurts even more. It's not just about missing an event.",
+    "I could get off social media right now and no one would even notice. Honestly, I don't even know why I still have the app at this point.",
+    "Sometimes it feels like everyone else is experiencing university while I'm watching from the outside."
+  ];
+
+  const visuals = {
+    windows: `<svg viewBox="0 0 140 30" xmlns="http://www.w3.org/2000/svg">
+      <rect class="mv-lit" x="4" y="3" width="14" height="24" rx="1"/>
+      <rect class="mv-c2" x="26" y="3" width="14" height="24" rx="1"/>
+      <rect class="mv-c3" x="48" y="3" width="14" height="24" rx="1"/>
+      <rect class="mv-dim" x="70" y="3" width="14" height="24" rx="1"/>
+      <rect class="mv-lit" x="92" y="3" width="14" height="24" rx="1"/>
+      <rect class="mv-c2" x="114" y="3" width="14" height="24" rx="1"/>
+    </svg>`,
+    bubbles: `<svg viewBox="0 0 140 60" xmlns="http://www.w3.org/2000/svg">
+      <rect class="mv-lit" x="10" y="8" width="28" height="18" rx="6"/>
+      <path class="mv-lit" d="M16,26 L14,34 L24,26 Z"/>
+      <rect class="mv-c3" x="44" y="4" width="26" height="16" rx="6"/>
+      <path class="mv-c3" d="M50,20 L48,27 L58,20 Z"/>
+      <rect class="mv-bubble" x="20" y="30" width="24" height="15" rx="6"/>
+      <path class="mv-bubble" d="M26,45 L25,52 L34,45 Z"/>
+      <rect class="mv-bubble-lone" x="96" y="30" width="28" height="18" rx="6"/>
+    </svg>`,
+    gap: `<svg viewBox="0 0 170 30" xmlns="http://www.w3.org/2000/svg">
+      <circle class="mv-head" cx="10" cy="15" r="7"/>
+      <circle class="mv-c2" cx="36" cy="15" r="7"/>
+      <circle class="mv-c3" cx="62" cy="15" r="7"/>
+      <circle class="mv-gap" cx="88" cy="15" r="7"/>
+      <circle class="mv-head" cx="114" cy="15" r="7"/>
+      <circle class="mv-c2" cx="140" cy="15" r="7"/>
+    </svg>`,
+    mute: `<svg viewBox="0 0 60 90" xmlns="http://www.w3.org/2000/svg">
+      <rect class="mv-phone" x="8" y="4" width="44" height="78" rx="9"/>
+      <circle class="mv-dot" cx="30" cy="14" r="2.4"/>
+      <line class="mv-hline" x1="16" y1="70" x2="44" y2="70"/>
+    </svg>`,
+    horizon: `<svg viewBox="0 0 160 50" xmlns="http://www.w3.org/2000/svg">
+      <circle class="mv-sun" cx="80" cy="30" r="15"/>
+      <rect class="mv-mask" x="0" y="30" width="160" height="20"/>
+      <line class="mv-hline" x1="0" y1="30" x2="160" y2="30"/>
+    </svg>`
+  };
+
+  function addVisual(key){
+    const fig = document.createElement('figure');
+    fig.className = 'mini-visual';
+    fig.innerHTML = visuals[key];
+    essay.appendChild(fig);
+  }
+
+  const pulls = [
+    { after: 4, text: '"Why didn\u2019t anyone think of me?"' },
+    { after: 4, text: "I don't need a huge circle. I just want a few genuine people — people I can call, laugh with, make random plans with, and feel completely comfortable around." }
+  ];
+
+  const paddingScale = [2.0, 2.3, 2.7, 3.1, 2.9, 2.5, 1.9];
+  const thoughtLines = ["Maybe I'm the problem.", "Maybe I don't know how to connect.", "Why wasn't I invited?"];
+
+  numbered.forEach((text, i) => {
+    if (i === 1) addVisual('windows');
+    if (i === 2) addVisual('bubbles');
+    if (i === 5) addVisual('mute');
+
+    const entry = document.createElement('div');
+    entry.className = 'entry';
+    entry.dataset.trigger = i + 1;
+    entry.style.paddingTop = paddingScale[i] + 'em';
+    entry.style.paddingBottom = paddingScale[i] + 'em';
+
+    const thoughtsHTML = (i === 3)
+      ? `<div class="thoughts">${thoughtLines.map(t => `<span class="thought">${t}</span>`).join('')}</div>`
+      : '';
+
+    entry.innerHTML = `<span class="idx">${String(i+1).padStart(2,'0')}</span><div>${thoughtsHTML}<p>${text}</p></div>`;
+    essay.appendChild(entry);
+
+    if (i === 4) {
+      addVisual('gap');
+      pulls.forEach(p => {
+        const qb = document.createElement('div');
+        qb.className = 'quote-block';
+        qb.innerHTML = `<p class="quote">${p.text}</p>`;
+        essay.appendChild(qb);
+      });
+    }
+  });
+
+  const closing1 = document.createElement('div');
+  closing1.className = 'quote-block closing';
+  closing1.innerHTML = `<p class="quote">I just hope this isn't how my university story ends.</p>`;
+  essay.appendChild(closing1);
+
+  addVisual('horizon');
+
+  const closing2 = document.createElement('div');
+  closing2.className = 'quote-block closing';
+  closing2.id = 'final-block';
+  closing2.innerHTML = `<p class="quote">Maybe I simply haven't found my people yet.</p>`;
+  essay.appendChild(closing2);
+
+  window.addEventListener('DOMContentLoaded', () => {
+    for (let c = 1; c <= 4; c++){
+      setTimeout(() => {
+        document.querySelectorAll(`[data-cluster="${c}"]`).forEach(el => el.classList.add('entered'));
+      }, c * 650);
+    }
+    setTimeout(() => {
+      document.querySelectorAll('[data-cluster="5"]').forEach(el => el.classList.add('entered'));
+    }, 5 * 650);
+    setTimeout(() => {
+      document.getElementById('hero-caption').classList.add('entered');
+    }, 6 * 650);
+  });
+
+  const revealables = document.querySelectorAll('.entry, .quote-block, .mini-visual');
+  const io = new IntersectionObserver((entries) => {
+    entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('in'); });
+  }, { threshold:0.3, rootMargin:'0px 0px -8% 0px' });
+  revealables.forEach(el => io.observe(el));
+
+  const hopeIds = ['hope-1','hope-2','hope-3','hope-4','hope-5'];
+  const triggers = document.querySelectorAll('.entry[data-trigger]');
+  const io2 = new IntersectionObserver((entries) => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        const t = parseInt(e.target.dataset.trigger, 10);
+        if (t >= 2 && t <= 6) {
+          const idx = t - 2;
+          const circle = document.getElementById(hopeIds[idx]);
+          const link = document.querySelector('.link-' + (idx+1));
+          if (circle) circle.classList.add(idx === 2 ? 'uncertain' : 'filled');
+          if (link) link.classList.add(idx === 2 ? 'faded' : 'on');
+          if (idx === hopeIds.length - 1) {
+            document.body.classList.add('warm');
+            document.getElementById('sidebar-headline').classList.add('warmed');
+            document.getElementById('glow-orb').classList.add('arrived');
+          }
+        }
+      }
+    });
+  }, { threshold:0.5 });
+  triggers.forEach(el => io2.observe(el));
+
+  const finalBlock = document.getElementById('final-block');
+  const you = document.getElementById('you');
+  const companion = document.getElementById('companion');
+  const io3 = new IntersectionObserver((entries) => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        you.classList.add('bloom');
+        setTimeout(() => companion.classList.add('near'), 1400);
+      }
+    });
+  }, { threshold:0.5 });
+  io3.observe(finalBlock);
+</script>
+
+</body>
+</html>
